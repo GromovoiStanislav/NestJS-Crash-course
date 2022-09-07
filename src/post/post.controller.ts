@@ -7,51 +7,36 @@ import {
   Body,
   Param,
 } from '@nestjs/common';
+
+import { PostService } from './post.service';
 import { PostDto } from './post.dto';
 
 @Controller('post')
 export class PostController {
-  posts: any[];
-
-  constructor() {
-    this.posts = [
-      { id: 1, text: 'Hello 1' },
-      { id: 2, text: 'Hello 2' },
-      { id: 3, text: 'Hello 3' },
-    ];
-  }
+  constructor(private readonly postService: PostService) {}
 
   @Get()
   async getAll() {
-    return this.posts;
+    return this.postService.getAll();
   }
 
   @Get(':id')
   async getById(@Param('id') id: string) {
-    return this.posts.find((p) => p.id === Number(id));
+    return this.postService.getById(id);
   }
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
-    this.posts = await this.posts.filter((p) => p.id !== Number(id));
-    return 'done';
+    return this.postService.delete(id);
   }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() dto: PostDto) {
-    const postId = await this.posts.findIndex((p) => p.id === Number(id));
-    if (postId >= 0) {
-      this.posts[postId].text = dto.text;
-      return this.posts[postId];
-    } else {
-      return 'Not found';
-    }
+    return this.postService.update(id, dto);
   }
 
   @Post()
   async create(@Body() dto: PostDto) {
-    const post = { ...dto, id: this.posts.length + 1 };
-    this.posts.push(post);
-    return post;
+    return this.postService.create(dto);
   }
 }
