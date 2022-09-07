@@ -33,16 +33,25 @@ export class PostController {
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
-    return this.posts.filter((p) => p.id === Number(id));
+    this.posts = await this.posts.filter((p) => p.id !== Number(id));
+    return 'done';
   }
 
   @Put(':id')
-  async update(@Param('id') id: string) {
-    return this.posts.filter((p) => p.id === Number(id));
+  async update(@Param('id') id: string, @Body() dto: PostDto) {
+    const postId = await this.posts.findIndex((p) => p.id === Number(id));
+    if (postId >= 0) {
+      this.posts[postId].text = dto.text;
+      return this.posts[postId];
+    } else {
+      return 'Not found';
+    }
   }
 
   @Post()
   async create(@Body() dto: PostDto) {
-    return [...this.posts, dto];
+    const post = { ...dto, id: this.posts.length + 1 };
+    this.posts.push(post);
+    return post;
   }
 }
