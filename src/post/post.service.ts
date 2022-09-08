@@ -1,44 +1,51 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { PostDto } from './post.dto';
+import { PostEntity } from './post.entity';
 
 @Injectable()
 export class PostService {
-  posts: any[];
-
-  constructor() {
-    this.posts = [
-      { id: 1, text: 'Hello 1' },
-      { id: 2, text: 'Hello 2' },
-      { id: 3, text: 'Hello 3' },
-    ];
-  }
+  constructor(
+    @InjectRepository(PostEntity)
+    private readonly postRepository: Repository<PostEntity>,
+  ) {}
 
   async getAll() {
-    return this.posts;
+    return this.postRepository.find();
   }
 
   async getById(id: string) {
-    return this.posts.find((p) => p.id === Number(id));
+    const post = await this.postRepository.findOne({
+      where: { id: Number(id) },
+    });
+    if (post) {
+      return post;
+    } else {
+      return 'Not found';
+    }
   }
 
   async delete(id: string) {
-    this.posts = await this.posts.filter((p) => p.id !== Number(id));
+    await this.postRepository.delete({ id: Number(id) });
     return 'done';
   }
 
   async update(id: string, dto: PostDto) {
-    const postId = await this.posts.findIndex((p) => p.id === Number(id));
-    if (postId >= 0) {
-      this.posts[postId].text = dto.text;
-      return this.posts[postId];
+    const post = await this.postRepository.findOne({
+      where: { id: Number(id) },
+    });
+    if (post) {
+      post.content = dto.content;
+      post.userName = dto.userName;
+      return this.postRepository.save(post);
     } else {
       return 'Not found';
     }
   }
 
   async create(dto: PostDto) {
-    const post = { ...dto, id: this.posts.length + 1 };
-    this.posts.push(post);
-    return post;
+    const post = this.postRepository.create(dto);
+    return this.postRepository.save(post);
   }
 }

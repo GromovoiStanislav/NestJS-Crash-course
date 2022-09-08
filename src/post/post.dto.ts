@@ -1,3 +1,4 @@
 export class PostDto {
-  readonly text: string;
+  readonly content: string;
+  readonly userName: string;
 }
